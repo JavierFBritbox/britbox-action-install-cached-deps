@@ -1,0 +1,26 @@
+name: 'Get and Cache Dependencies'
+description: 'Get dependencies and cache them to be used later'
+inputs:
+  caching:
+    description: 'Enable/Disable cache'
+    required: false
+    default: 'true'
+  prefix:
+    description: 'Allow you to choose the folder where the nodejs code is located'
+    required: false
+    default: ''
+runs:
+  using: 'composite'
+  steps:
+    - name: Cache dependencies
+      if: inputs.caching == 'true'
+      id: cache
+      uses: actions/cache@v3
+      with:
+        path: '**/node_modules'
+        key: deps-node-modules-folder_${{ runner.os }}_${{ hashFiles('**/package-lock.json') }}
+    - name: Install dependencies
+      id: install
+      if: steps.cache.outputs.cache-hit != 'true' || inputs.caching != true
+      run: npm ci --prefix ${{ inputs.prefix }}
+      shell: bash
